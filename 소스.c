@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WRANINGS_
 
 unsigned long long int Plaintext = 0x123456ABCD132536;
-unsigned long long int Key1 = /*0x01FE01FE01FE01FE;*/ 0xFEFEFEFEFEFEFEFE; /* 0xE0E0E0E0F1F1F1F1;*/    /*0x1F1F1F1F0E0E0E0E;*/ /* 0xAABB09182736CCDD; */
+unsigned long long int Key1 = 0x01FE01FE01FE01FE; /*0xFEFEFEFEFEFEFEFE;*/ /* 0xE0E0E0E0F1F1F1F1;*/    /*0x1F1F1F1F0E0E0E0E;*/ /* 0xAABB09182736CCDD; */
 unsigned long long int Key2 = 0xFE01FE01FE01FE01;
 
 int InitialPermutationTable[64] = { // 초기 치환
