@@ -2,9 +2,10 @@
 #define _CRT_SECURE_NO_WRANINGS_
 
 unsigned long long int Plaintext = 0x123456ABCD132536;
-unsigned long long int Key = 0xAABB09182736CCDD;
+unsigned long long int Key1 = /*0x01FE01FE01FE01FE;*/ 0xFEFEFEFEFEFEFEFE; /* 0xE0E0E0E0F1F1F1F1;*/    /*0x1F1F1F1F0E0E0E0E;*/ /* 0xAABB09182736CCDD; */
+unsigned long long int Key2 = 0xFE01FE01FE01FE01;
 
-int InitialPermutationTable[64] = { // ÃÊ±â Ä¡È¯
+int InitialPermutationTable[64] = { // ì´ˆê¸° ì¹˜í™˜
     58, 50, 42, 34, 26, 18, 10,  2,
     60, 52, 44, 36, 28, 20, 12,  4,
     62, 54, 46, 38, 30, 22, 14,  6,
@@ -15,7 +16,7 @@ int InitialPermutationTable[64] = { // ÃÊ±â Ä¡È¯
     63, 55, 47, 39, 31, 23, 15,  7
 };
 
-int FinalPermutationTable[64] = { // ÃÖÁ¾ Ä¡È¯
+int FinalPermutationTable[64] = { // ìµœì¢… ì¹˜í™˜
     40,  8, 48, 16, 56, 24, 64, 32,
     39,  7, 47, 15, 55, 23, 63, 31,
     38,  6, 46, 14, 54, 22, 62, 30,
@@ -26,7 +27,7 @@ int FinalPermutationTable[64] = { // ÃÖÁ¾ Ä¡È¯
     33,  1, 41,  9, 49, 17, 57, 25
 };
 
-int ExpansionPermutationTable[48] = { // È®Àå P-¹Ú½º (Expansion P-box)
+int ExpansionPermutationTable[48] = { // í™•ìž¥ P-ë°•ìŠ¤ (Expansion P-box)
     32,1,2,3,4,5,
     4,5,6,7,8,9,
     8,9,10,11,12,13,
@@ -37,14 +38,14 @@ int ExpansionPermutationTable[48] = { // È®Àå P-¹Ú½º (Expansion P-box)
     28,29,30,31,32,01
 };
 
-int StraightPermutationTable[32] = { // ´Ü¼ø P-¹Ú½º (Straight P-box)
+int StraightPermutationTable[32] = { // ë‹¨ìˆœ P-ë°•ìŠ¤ (Straight P-box)
     16,  7, 20, 21, 29, 12, 28, 17,
     1, 15, 23, 26,  5, 18, 31, 10,
     2,  8, 24, 14, 32, 27,  3,  9,
     19, 13, 30,  6, 22, 11,  4, 25
 };
 
-int SubstituteTables[8][4][16] = { // S-¹Ú½º (Substitute-box)
+int SubstituteTables[8][4][16] = { // S-ë°•ìŠ¤ (Substitute-box)
     // s1 [0]
     {
         { 14,4,13,1,2,15,11,8,3,10,6,12,5,9,0,7 },
@@ -103,7 +104,7 @@ int SubstituteTables[8][4][16] = { // S-¹Ú½º (Substitute-box)
     }
 };
 
-int ParityDropTable[56] = { // ÆÐ¸®Æ¼ ºñÆ® Á¦°Å Ç¥
+int ParityDropTable[56] = { // íŒ¨ë¦¬í‹° ë¹„íŠ¸ ì œê±° í‘œ
     57,49,41,33,25,17,9,1,
     58,50,42,34,26,18,10,2,
     59,51,43,35,27,19,11,3,
@@ -113,11 +114,11 @@ int ParityDropTable[56] = { // ÆÐ¸®Æ¼ ºñÆ® Á¦°Å Ç¥
     29,21,13,5,28,20,12,4
 };
 
-int ShiftTable[16] = { // ShiftTable[0]~[15] -> [0] -> 1, [1] -> 2, [8] -> 9, [15] -> 1 (1bit), ³ª¸ÓÁö (2bit)
+int ShiftTable[16] = { // ShiftTable[0]~[15] -> [0] -> 1, [1] -> 2, [8] -> 9, [15] -> 1 (1bit), ë‚˜ë¨¸ì§€ (2bit)
     1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1
 };
 
-int KeyCompressionTable[48] = { // Å° Ãà¼Ò Ç¥
+int KeyCompressionTable[48] = { // í‚¤ ì¶•ì†Œ í‘œ
     14,17,11,24,1,5,3,28,
     15,6,21,10,23,19,12,4,
     26,8,16,7,27,20,13,2,
@@ -143,9 +144,9 @@ void split(int n1, int n2, int inBlock[], int leftBlock[], int rightBlock[]) {
     }
 }
 
-void copy(int n, int a[], int b[]) {
+void copy(int n, int* a, int* b) {
     for (int i = 0; i < n; i++) {
-        b[i] = a[i];
+        *(b + i) = *(a + i);
     }
 }
 
@@ -158,12 +159,12 @@ void exclusiveOr(int n, int leftBlock[], int T2[], int T3[]) {
 void substitute(int inBlock[48], int outBlock[32], int SubstituteTables[8][4][16]) { // 6bit -> 4bit, S-BOX
     int row, col, value;
     for (int i = 0; i < 8; i++) {
-        row = 2 * inBlock[i * 6 + 0] + inBlock[i * 6 + 5]; // ¹è¿­[0][][][][][5] ¾ÕµÚ bit¸¦ °¡Áö°í °è»ê
-        col = 8 * inBlock[i * 6 + 1] + 4 * inBlock[i * 6 + 2] + 2 * inBlock[i * 6 + 3] + inBlock[i * 6 + 4]; // ¹è¿­[][1][2][3][4][]
-        // Áß°£[1],[2],[3],[4] bit¸¦ °¡Áö°í °è»ê
+        row = 2 * inBlock[i * 6 + 0] + inBlock[i * 6 + 5]; // ë°°ì—´[0][][][][][5] ì•žë’¤ bitë¥¼ ê°€ì§€ê³  ê³„ì‚°
+        col = 8 * inBlock[i * 6 + 1] + 4 * inBlock[i * 6 + 2] + 2 * inBlock[i * 6 + 3] + inBlock[i * 6 + 4]; // ë°°ì—´[][1][2][3][4][]
+        // ì¤‘ê°„[1],[2],[3],[4] bitë¥¼ ê°€ì§€ê³  ê³„ì‚°
         value = SubstituteTables[i][row][col];
-        // ¹è¿­[0][1][2][3] 8¹ø¾¿___ 4 bit * 8, outBlock[32]
-        // ¿¹¸¦ µé¾î value = 12ÀÌ¸é,                    10Áø¼ö¸¦ 2Áø¼ö·Î
+        // ë°°ì—´[0][1][2][3] 8ë²ˆì”©___ 4 bit * 8, outBlock[32]
+        // ì˜ˆë¥¼ ë“¤ì–´ value = 12ì´ë©´,                    10ì§„ìˆ˜ë¥¼ 2ì§„ìˆ˜ë¡œ
         //outBlock[i * 4] = value / 8; // 1
         //value = value % 8; // 4
         //outBlock[i * 4 + 1] = value / 4; // 1
@@ -173,7 +174,7 @@ void substitute(int inBlock[48], int outBlock[32], int SubstituteTables[8][4][16
         //outBlock[i * 4 + 3] = value; // 0
         //// 1100
 
-        // ¿¹¸¦ µé¾î value = 12ÀÌ¸é,                    10Áø¼ö¸¦ 2Áø¼ö·Î
+        // ì˜ˆë¥¼ ë“¤ì–´ value = 12ì´ë©´,                    10ì§„ìˆ˜ë¥¼ 2ì§„ìˆ˜ë¡œ
         outBlock[i * 4 + 3] = value % 2; // 0
         value = value / 2;
         outBlock[i * 4 + 2] = value % 2; // 0
@@ -230,7 +231,7 @@ void shiftLeft(int block[28], int numOfShifts) {
 }
 
 void combine(int n1, int n2, int a[], int b[], int c[]) {
-    for (int i = n1 - 1; i >= 0; i--) { // left, right ÇÕÄ¡±â
+    for (int i = n1 - 1; i >= 0; i--) { // left, right í•©ì¹˜ê¸°
         c[i] = a[i];
     }
     for (int i = n2 - 1; i >= n1; i--) {
@@ -264,20 +265,12 @@ void Cipher(int plainBlock[64], int RoundKeys[16][48], int cipherBlock[64]) {
     permute(64, 64, outBlock, cipherBlock, FinalPermutationTable);
 }
 
-void Hex(int n1, int plainBlock[], int value[]) { // 2Áø¼ö -> 16Áø¼ö
-    int plainBlock2[16][4];
+void Hex(int n1, int plainBlock[], int value[]) { // 2ì§„ìˆ˜ -> 16ì§„ìˆ˜
     n1 = n1 / 4;
     for (int i = 0; i < n1; i++) {
-        for (int j = 3; j >= 0; j--) {
-            plainBlock2[i][j] = plainBlock[(i * 4) + j];
-        }
+        value[i] = 8 * plainBlock[4 * i] + 4 * plainBlock[4 * i + 1] + 2 * plainBlock[4 * i + 2] + plainBlock[4 * i + 3];
     }
     for (int i = 0; i < n1; i++) {
-        int n = 1;
-        for (int j = 3; j >= 0; j--) {
-            value[i] = value[i] + plainBlock2[i][j] * n;
-            n = n * 2;
-        }
         if (value[i] <= 9) {
             value[i] = value[i] + 48;
         }
@@ -289,7 +282,7 @@ void Hex(int n1, int plainBlock[], int value[]) { // 2Áø¼ö -> 16Áø¼ö
 
 int main() {
     int plainBlock[64], cipherBlock[64];
-    int RoundKeys[16][48], keyWithParities[64];
+    int RoundKeys1[16][48], RoundKeys2[16][48], keyWithParities1[64], keyWithParities2[64];
 
     printf("\n=====================64BIT PLAINBLOCK====================\n\n");
     for (int i = 63; i >= 0; i--) {
@@ -301,37 +294,69 @@ int main() {
     }
     int Hex1[16] = { 0, };
     Hex(64, plainBlock, Hex1);
-    printf("\n\n2Áø¼ö -> 16Áø¼ö·Î Ç¥Çö : [PLAINBLOCK] ");
+    printf("\n\n2ì§„ìˆ˜ -> 16ì§„ìˆ˜ë¡œ í‘œí˜„ : [PLAINBLOCK] ");
     for (int i = 0; i < 16; i++) {
         printf("%c", Hex1[i]);
     }
     printf("\n\n=====================KEYWITHPARITIES=====================\n\n");
     for (int i = 63; i >= 0; i--) {
-        keyWithParities[i] = Key % 2;
-        Key = Key / 2;
+        keyWithParities1[i] = Key1 % 2;
+        Key1 = Key1 / 2;
     }
     for (int i = 0; i < 64; i++) {
-        printf("%d", keyWithParities[i]);
+        printf("%d", keyWithParities1[i]);
     }
     int Hex2[16] = { 0, };
-    Hex(64, keyWithParities, Hex2);
-    printf("\n\n2Áø¼ö -> 16Áø¼ö·Î Ç¥Çö : [KEY] ");
+    Hex(64, keyWithParities1, Hex2);
+    printf("\n\n2ì§„ìˆ˜ -> 16ì§„ìˆ˜ë¡œ í‘œí˜„ : [KEY] ");
     for (int i = 0; i < 16; i++) {
         printf("%c", Hex2[i]);
     }
     printf("\n\n============KEY_GENERATOR[ROUNDKEYS[16][48]]=============\n\n");
 
-    Key_Genenrator(keyWithParities, RoundKeys, ShiftTable);
+    Key_Genenrator(keyWithParities1, RoundKeys1, ShiftTable);
     int Hex3[16][12] = { 0, };
     for (int i = 0; i < 16; i++) {
-        Hex(48, RoundKeys[i], Hex3[i]);
+        Hex(48, RoundKeys1[i], Hex3[i]);
     }
     for (int i = 0; i < 16; i++) {
-        printf("¶ó¿îµå ¼ö[%d]: ", i + 1);
+        printf("ë¼ìš´ë“œ ìˆ˜[%d]: ", i + 1);
         for (int j = 0; j < 48; j++) {
-            printf("%d", RoundKeys[i][j]);
+            printf("%d", RoundKeys1[i][j]);
         }
-        printf("\n\n2Áø¼ö -> 16Áø¼ö·Î Ç¥Çö : [ROUNDKEYS(%d)] ", i + 1);
+        printf("\n\n2ì§„ìˆ˜ -> 16ì§„ìˆ˜ë¡œ í‘œí˜„ : [ROUNDKEYS(%d)] ", i + 1);
+        for (int j = 0; j < 12; j++) {
+            printf("%c", Hex3[i][j]);
+        }
+        printf("\n\n");
+    }
+    printf("\n\n=====================KEYWITHPARITIES=====================\n\n");
+    for (int i = 63; i >= 0; i--) {
+        keyWithParities2[i] = Key2 % 2;
+        Key2 = Key2 / 2;
+    }
+    for (int i = 0; i < 64; i++) {
+        printf("%d", keyWithParities2[i]);
+    }
+    //int Hex2[16] = { 0, };
+    Hex(64, keyWithParities2, Hex2);
+    printf("\n\n2ì§„ìˆ˜ -> 16ì§„ìˆ˜ë¡œ í‘œí˜„ : [KEY] ");
+    for (int i = 0; i < 16; i++) {
+        printf("%c", Hex2[i]);
+    }
+    printf("\n\n============KEY_GENERATOR[ROUNDKEYS[16][48]]=============\n\n");
+
+    Key_Genenrator(keyWithParities2, RoundKeys2, ShiftTable);
+    //int Hex3[16][12] = { 0, };
+    for (int i = 0; i < 16; i++) {
+        Hex(48, RoundKeys2[i], Hex3[i]);
+    }
+    for (int i = 0; i < 16; i++) {
+        printf("ë¼ìš´ë“œ ìˆ˜[%d]: ", i + 1);
+        for (int j = 0; j < 48; j++) {
+            printf("%d", RoundKeys2[i][j]);
+        }
+        printf("\n\n2ì§„ìˆ˜ -> 16ì§„ìˆ˜ë¡œ í‘œí˜„ : [ROUNDKEYS(%d)] ", i + 1);
         for (int j = 0; j < 12; j++) {
             printf("%c", Hex3[i][j]);
         }
@@ -340,69 +365,43 @@ int main() {
 
     printf("\n=====================CIPHER(CIPHERBLOCK)=================\n\n");
 
-    Cipher(plainBlock, RoundKeys, cipherBlock);
+    Cipher(plainBlock, RoundKeys1, cipherBlock);
 
     for (int i = 0; i < 64; i++) {
         printf("%d", cipherBlock[i]);
     }
     int Hex4[16] = { 0, };
     Hex(64, cipherBlock, Hex4);
-    printf("\n\n2Áø¼ö -> 16Áø¼ö·Î Ç¥Çö : [CIPHERBLOCK] ");
+    printf("\n\n2ì§„ìˆ˜ -> 16ì§„ìˆ˜ë¡œ í‘œí˜„ : [CIPHERBLOCK] ");
+    for (int i = 0; i < 16; i++) {
+        printf("%c", Hex4[i]);
+    }
+
+    //printf("\n\n=====================CIPHER(CIPHERBLOCK)=================\n\n");
+
+    //Cipher(cipherBlock, RoundKeys2, cipherBlock);
+
+    //for (int i = 0; i < 64; i++) {
+    //    printf("%d", cipherBlock[i]);
+    //}
+    ////int Hex4[16] = { 0, };
+    //Hex(64, cipherBlock, Hex4);
+    //printf("\n\n2ì§„ìˆ˜ -> 16ì§„ìˆ˜ë¡œ í‘œí˜„ : [CIPHERBLOCK] ");
+    //for (int i = 0; i < 16; i++) {
+    //    printf("%c", Hex4[i]);
+    
+    printf("\n\n=====================CIPHER(CIPHERBLOCK)=================\n\n");
+
+    Cipher(cipherBlock, RoundKeys1, cipherBlock);
+
+    for (int i = 0; i < 64; i++) {
+        printf("%d", cipherBlock[i]);
+    }
+    Hex(64, cipherBlock, Hex4);
+    printf("\n\n2ì§„ìˆ˜ -> 16ì§„ìˆ˜ë¡œ í‘œí˜„ : [CIPHERBLOCK] ");
     for (int i = 0; i < 16; i++) {
         printf("%c", Hex4[i]);
     }
     printf("\n\n**************************END****************************");
     printf("\n\n*********************************************************");
-   ///* printf("\n\n=====================CIPHER(PERMUTE)=====================\n\n");
-   // int inBlock[64];
-   // permute(64, 64, plainBlock, inBlock, InitialPermutationTable);
-
-   // for (int i = 0; i < 64; i++) {
-   //     printf("%d", inBlock[i]);
-   // }
-   // printf("\n\n=====================SPLIT ÈÄ(LEFTBLOCK[0])===============\n\n");
-
-   // int leftBlock[32], rightBlock[32];
-   // split(64, 32, inBlock, leftBlock, rightBlock);
-
-   // for (int i = 0; i < 32; i++) {
-   //     printf("%d", leftBlock[i]);
-   // }
-   // printf("\n\n=====================SPLIT ÈÄ(RIGHTBLOCK[0])==============\n\n");
-   // for (int i = 0; i < 32; i++) {
-   //     printf("%d", rightBlock[i]);
-   // }
-   // printf("\n");
-   // for (int round = 0; round < 16; round++) {
-   //     printf("\n\n=====================ROUND(%d)=============================\n\n", round + 1);
-   //     mixer(leftBlock, rightBlock, RoundKeys[round]);
-   //     if (round != 15) {
-   //         swapper(leftBlock, rightBlock);
-   //     }
-   //     for (int i = 0; i < 32; i++) {
-   //         printf("%d", leftBlock[i]);
-   //     }
-   //     puts("\n");
-   //     for (int i = 0; i < 32; i++) {
-   //         printf("%d", rightBlock[i]);
-   //     }
-   // }
-   // printf("\n\n=====================COMBINE ÈÄ(OUTBLOCK)==============\n\n");
-
-   // int outBlock[64];
-   // combine(32, 64, leftBlock, rightBlock, outBlock);
-
-   // for (int i = 0; i < 64; i++) {
-   //     printf("%d", outBlock[i]);
-   // }
-   // printf("\n\n=====================PERMUTE(CIPHERBLOCK)==============\n\n");
-
-   // int cipherBlock1[64];
-   // permute(64, 64, outBlock, cipherBlock1, FinalPermutationTable);
-
-   // for (int i = 0; i < 64; i++) {
-   //     printf("%d", cipherBlock1[i]);
-   // }
-   // printf("\n");
-   // return 0;*/
 }
